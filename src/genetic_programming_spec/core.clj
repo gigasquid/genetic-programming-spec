@@ -3,9 +3,9 @@
 
 
 (def seqs ['s/+ 's/*])
-(def preds [even? odd? string? boolean?])
+(def preds [integer? string? boolean?])
 (def seq-prob 0.5)
-(def nest-prob 0.2)
+(def nest-prob 0.0)
 (def max-depth 4)
 (def max-num 5)
 
@@ -31,11 +31,23 @@
 (def x (make-random-cat 2))
 x
 
-(s/explain-data (eval x) [true 2])
+(s/explain-data (eval x) [1 1])
+(get-in  (:clojure.spec/problems (s/explain-data (eval x) [true 1])) [0 :in 0]
+     )
 
-(defn make-initial-population [popsize cat-len]
+(defn initial-population [popsize cat-len]
   (for [i (range popsize)]
     {:program (make-random-cat cat-len)}))
+
+(def pop (initial-population 5 4))
+
+(defn score [creature test-data]
+  (let [problems (:clojure.spec/problems (s/explain-data (eval (:program creature)) test-data))]
+    (if problems
+      (assoc creature :score (get-in problems [0 :in 0]))
+      (assoc creature :score 10))))
+
+(score {:program x} [true 1])
 
 
 
