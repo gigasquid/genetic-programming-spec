@@ -2,13 +2,11 @@
   (:require [clojure.spec :as s]))
 
 
-
-(def nest-fn s/spec)
 (def seqs ['s/+ 's/*])
 (def preds [even? odd? string? boolean?])
 (def seq-prob 0.5)
 (def nest-prob 0.2)
-(defn max-depth 4)
+(def max-depth 4)
 (def max-num 5)
 
 (declare make-random-seq)
@@ -19,19 +17,25 @@
     `~(rand-nth preds)))
 
 (defn make-random-seq [n]
-  `(~(rand-nth seqs) ~(make-random-arg (dec n))))
+  (if (< (rand) nest-prob)
+    `(s/spec ~(rand-nth seqs) ~(make-random-arg (dec n)))
+    `(~(rand-nth seqs) ~(make-random-arg (dec n)))))
 
 (make-random-arg 2)
 
 (defn make-random-cat [len]
   (let [args (reduce (fn [r i]
-                       (conj r (keyword (str i)) (make-random-arg 3))) [] (range len))]
+                       (conj r (keyword (str i)) (make-random-arg max-depth))) [] (range len))]
     `(s/cat ~@args)))
 
 (def x (make-random-cat 2))
 x
 
-(s/explain-data (eval x) ["hi" 3])
+(s/explain-data (eval x) [true 2])
+
+(defn make-initial-population [popsize cat-len]
+  (for [i (range popsize)]
+    {:program (make-random-cat cat-len)}))
 
 
 
