@@ -1,7 +1,8 @@
 (ns genetic-programming-spec.core
-  (:require [clojure.spec :as s]
-            [clojure.set :as set]
-            [clojure.walk :as walk]))
+  (:require [clojure.set :as set]
+            [clojure.spec :as s]
+            [clojure.walk :as walk]
+            [clojure.zip :as zip]))
 
 
 (def seqs ['s/+ 's/*])
@@ -9,6 +10,7 @@
 (def seq-prob 0.5)
 (def nest-prob 0.1)
 (def mutate-prob 0.1)
+(def crossover-prob 0.7)
 (def max-depth 4)
 (def max-num 5)
 
@@ -54,16 +56,37 @@ x
 
 (score {:program x} [1 1])
 
+(defn mutable? [node]
+  (or (when (seq? node)
+        (contains? (set/union (set seqs) #{'clojure.spec/spec}) (first node)))
+      (contains? (set preds) node)))
 
 (defn mutate [creature]
   (let [program (:program creature)
-        mutable? (fn [x] (contains? (set/union (set seqs) (set preds)) x))
+
         mutated-program (walk/postwalk (fn [x] (if (and (mutable? x) (< (rand) mutate-prob))
                                                 (make-random-arg max-depth)
-                                                x)) x)]
+                                                x)) program)]
     (assoc creature :program mutated-program)))
 
 (mutate {:program x :score 1})
+
+
+
+(defn crossover [creature1 creature2]
+  (let [program1 (:program creature1)
+        program2 (:program creature2)
+        chosen-node (first (walk/walk #(when (and (< (rand) crossover-prob) (mutable? %)) %)
+                                       #(remove nil? %) program1))
+        crossed-over? (atom false)
+        crossover-program (if chosen-node
+                             (walk/postwalk (fn [x] (if (and (mutable? x) (< (rand) crossover-prob) (not @crossed-over?))
+                                                (do (reset! crossed-over? true) chosen-node)
+                                                x)) program2)
+                             program2)]
+    {:program crossover-program}))
+
+(crossover {:program x :score 1} {:program (make-random-cat 4) :score 1})
 
 
 
