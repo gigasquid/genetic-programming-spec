@@ -84,75 +84,42 @@
   (let [selected (repeatedly tournament-size #(rand-nth creatures))]
     (-> (sort-by :score selected) reverse first)))
 
+(defn perfect-fit [creatures]
+  (first (filter #(= 100 (:score %)) creatures)))
+
 (defn evolve [pop-size max-gen tournament-size test-data]
   (loop [n max-gen
          creatures (initial-population pop-size (count test-data))]
     (println "generation " (- max-gen n))
-    (if (zero? n)
-      (map (fn [creature] (score creature test-data)) creatures)
-      (let [scored-creatures (map (fn [creature] (score creature test-data)) creatures)
-            elites (take 2 (reverse (sort-by :score scored-creatures)))
-            new-creatures (for [i (range (- (count creatures) 2))]
-                            ;; prob add a totally new node
-                            (if (< (rand) new-node-prob)
-                             (do "making random node! "
-                                 {:program (make-random-cat (count test-data))})
-                             (let [creature1 (select-best scored-creatures tournament-size)
-                                   creature2 (select-best scored-creatures tournament-size)]
-                               (mutate (crossover creature1 creature2)))))]
-       (println :elites (map :score elites))
-       (recur (dec n) (into new-creatures elites))))))
+    (let [scored-creatures (map (fn [creature] (score creature test-data)) creatures)]
+     (if (or (zero? n) (perfect-fit scored-creatures))
+       scored-creatures
+       (let [elites (take 2 (reverse (sort-by :score scored-creatures)))
+             new-creatures (for [i (range (- (count creatures) 2))]
+                             ;; prob add a totally new node
+                             (if (< (rand) new-node-prob)
+                               (do "making random node! "
+                                   {:program (make-random-cat (count test-data))})
+                               (let [creature1 (select-best scored-creatures tournament-size)
+                                     creature2 (select-best scored-creatures tournament-size)]
+                                 (mutate (crossover creature1 creature2)))))]
+         (println :elites (map :score elites))
+         (recur (dec n) (into new-creatures elites)))))))
 
 
 (comment
 
   (def result (evolve 100 50 7 ["hi" true 5 10 "boo"]))
-  (first result)
-  ;{:program (clojure.spec/cat :0 string? :1 boolean? :2 (s/and integer?) :3 (s/and (s/and (s/and integer? even?))) :4 string?), :score 100}
+  (perfect-fit result)
+  ;{:program (clojure.spec/cat :0 string? :1 boolean? :2 (s/and integer? odd?) :3 integer? :4 string?), :score 100}
 
 
-
-(take 5 (filter #(= 100 (:score %)) result))
-;; ({:program (clojure.spec/cat :0 string? :1 boolean? :2 (s/and integer?) :3 (s/and (s/and (s/and integer? even?))) :4 string?),
-;;   :score 100}
-;;  {:program
-;;   (clojure.spec/cat
-;;    :0
-;;    (s/+ (s/+ string?))
-;;    :1
-;;    boolean?
-;;    :2
-;;    (s/and integer?)
-;;    :3
-;;    (s/and (s/and (s/and integer? even?)))
-;;    :4
-;;    string?),
-;;   :score 100}
-;;  {:program
-;;   (clojure.spec/cat
-;;    :0
-;;    (s/+ (s/+ (s/+ (s/+ (s/+ (s/+ string?))))))
-;;    :1
-;;    boolean?
-;;    :2
-;;    (s/and integer?)
-;;    :3
-;;    (s/and (s/and (s/and integer? even?)))
-;;    :4
-;;    string?),
-;;   :score 100}
-;;  {:program (clojure.spec/cat :0 string? :1 boolean? :2 (s/and integer?) :3 (s/and (s/and (s/and integer? even?))) :4 string?),
-;;   :score 100}
-;;  {:program (clojure.spec/cat :0 (s/+ string?) :1 boolean? :2 (s/and integer?) :3 integer? :4 string?), :score 100})
-
-
-  (s/exercise (eval (:program (first result))) 5)
-
-;; ([("" false 0 0 "") {:0 "", :1 false, :2 0, :3 0, :4 ""}]
-;;  [("4" false 0 0 "F") {:0 "4", :1 false, :2 0, :3 0, :4 "F"}]
-;;  [("L9" false -1 0 "7") {:0 "L9", :1 false, :2 -1, :3 0, :4 "7"}]
-;;  [("" true -2 0 "") {:0 "", :1 true, :2 -2, :3 0, :4 ""}]
-;;  [("3L" true -2 0 "") {:0 "3L", :1 true, :2 -2, :3 0, :4 ""}])
+  (s/exercise (eval (:program (perfect-fit result))) 5)
+;; ([("" true -1 -1 "") {:0 "", :1 true, :2 -1, :3 -1, :4 ""}]
+;;  [("D" false -1 -1 "G") {:0 "D", :1 false, :2 -1, :3 -1, :4 "G"}]
+;;  [("12" false -1 0 "l0") {:0 "12", :1 false, :2 -1, :3 0, :4 "l0"}]
+;;  [("" false -1 -2 "") {:0 "", :1 false, :2 -1, :3 -2, :4 ""}]
+;;  [("2" false 1 0 "Jro") {:0 "2", :1 false, :2 1, :3 0, :4 "Jro"}])
 
 
 )
