@@ -7,7 +7,7 @@
 (def seqs ['s/+ 's/*])
 (def preds ['integer? 'string? 'boolean? '(s/and integer? even?) '(s/and integer? odd?)])
 (def seq-prob 0.5)
-(def nest-prob 0.0)
+(def nest-prob 0.1)
 (def mutate-prob 0.1)
 (def max-depth 4)
 (def max-num 5)
@@ -21,7 +21,7 @@
 
 (defn make-random-seq [n]
   (if (< (rand) nest-prob)
-    `(s/spec ~(rand-nth seqs) ~(make-random-arg (dec n)))
+    `(s/spec (~(rand-nth seqs) ~(make-random-arg (dec n))))
     `(~(rand-nth seqs) ~(make-random-arg (dec n)))))
 
 (make-random-arg 2)
@@ -34,9 +34,11 @@
 (def x (make-random-cat 4))
 x
 
-(s/explain-data (eval x) [true 2])
-(get-in  (:clojure.spec/problems (s/explain-data (eval x) [true 1])) [0 :in 0]
-     )
+(s/explain (s/cat :x (s/spec (s/* string?))) [["hi"]])
+
+(s/explain-data (eval x) [1 [true false] "hi" "bye" 6])
+
+(get-in  (:clojure.spec/problems (s/explain-data (eval x) [true 1])) [0 :in 0])
 
 (defn initial-population [popsize cat-len]
   (for [i (range popsize)]
