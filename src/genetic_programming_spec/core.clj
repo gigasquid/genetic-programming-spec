@@ -1,18 +1,17 @@
 (ns genetic-programming-spec.core
   (:require [clojure.set :as set]
             [clojure.spec :as s]
-            [clojure.walk :as walk]
-            [clojure.zip :as zip]))
+            [clojure.walk :as walk]))
 
 
 (def seqs ['s/+ 's/*])
 (def preds ['integer? 'string? 'boolean? '(s/and integer? even?) '(s/and integer? odd?)])
 (def seq-prob 0.5)
-(def nest-prob 0.1)
+(def nest-prob 0.05)
 (def mutate-prob 0.1)
 (def crossover-prob 0.7)
 (def max-depth 4)
-(def max-num 5)
+(def max-cat-len 5)
 
 (declare make-random-seq)
 
@@ -33,28 +32,14 @@
                        (conj r (keyword (str i)) (make-random-arg max-depth))) [] (range len))]
     `(s/cat ~@args)))
 
-(def x (make-random-cat 4))
-x
-
-(s/explain (s/cat :x (s/spec (s/* string?))) [["hi"]])
-
-(s/explain-data (eval x) [1 [true false] "hi" "bye" 6])
-
-(get-in  (:clojure.spec/problems (s/explain-data (eval x) [true 1])) [0 :in 0])
-
-(defn initial-population [popsize cat-len]
-  (for [i (range popsize)]
-    {:program (make-random-cat cat-len)}))
-
-(def pop (initial-population 5 4))
-
 (defn score [creature test-data]
-  (let [problems (:clojure.spec/problems (s/explain-data (eval (:program creature)) test-data))]
-    (if problems
-      (assoc creature :score (get-in problems [0 :in 0]))
-      (assoc creature :score 100))))
-
-(score {:program x} [1 1])
+  (try
+   (let [problems (:clojure.spec/problems (s/explain-data (eval (:program creature)) test-data))]
+     (if problems
+       (assoc creature :score (get-in problems [0 :in 0]))
+       (assoc creature :score 100)))
+   (catch Throwable e (do (println "Creature is bad!" e)
+                          (assoc creature :score 0)))))
 
 (defn mutable? [node]
   (or (when (seq? node)
@@ -69,10 +54,6 @@ x
                                                 x)) program)]
     (assoc creature :program mutated-program)))
 
-(mutate {:program x :score 1})
-
-
-
 (defn crossover [creature1 creature2]
   (let [program1 (:program creature1)
         program2 (:program creature2)
@@ -86,7 +67,26 @@ x
                              program2)]
     {:program crossover-program}))
 
-(crossover {:program x :score 1} {:program (make-random-cat 4) :score 1})
+(defn initial-population [popsize]
+  (for [i (range popsize)]
+    {:program (make-random-cat (inc (rand-int max-cat-len)))}))
+
+(def population (initial-population 5))
+
+population
+
+
+(comment
+  (def x (make-random-cat 4))
+  x
+  (s/explain-data (eval x) [true 2 true false])
+  (score {:program x} [1 1 nil 1])
+  (mutate {:program x :score 1})
+  (crossover {:program x :score 1} {:program (make-random-cat 4) :score 1})
+
+)
+
+
 
 
 
