@@ -9,12 +9,11 @@
 (def preds ['integer? 'string? 'boolean? '(s/and integer? even?) '(s/and integer? odd?)])
 (def seq-prob 0.3)
 (def nest-prob 0.00)
-(def and-or-prob 0.2)
+(def and-or-prob 0.5)
 (def mutate-prob 0.1)
 (def crossover-prob 0.7)
 (def new-node-prob 0.05)
 (def max-depth 4)
-(def max-cat-len 5)
 
 (declare make-random-seq)
 
@@ -107,47 +106,55 @@
 
 (comment
 
-  (def result (evolve 100 10 7 ["hi" true 5 8 7]))
+  (def result (evolve 100 50 7 ["hi" true 5 10 "boo"]))
   (first result)
-;{:program (clojure.spec/cat :0 string? :1 (s/+ boolean?) :2 (s/* string?) :3 (s/* integer?)), :score 100}
+  ;{:program (clojure.spec/cat :0 string? :1 boolean? :2 (s/and integer?) :3 (s/and (s/and (s/and integer? even?))) :4 string?), :score 100}
 
 
 
-  (filter #(= 100 (:score %)) result)
-
-;; ({:program (clojure.spec/cat :0 string? :1 (s/+ boolean?) :2 (s/* string?) :3 (s/* integer?)), :score 100}
-;;  {:program
-;;   (clojure.spec/cat :0 (s/* string?) :1 (s/+ boolean?) :2 (s/and (s/and (s/and integer? odd?) odd?) odd?) :3 (s/+ integer?)),
+(take 5 (filter #(= 100 (:score %)) result))
+;; ({:program (clojure.spec/cat :0 string? :1 boolean? :2 (s/and integer?) :3 (s/and (s/and (s/and integer? even?))) :4 string?),
 ;;   :score 100}
-;;  {:program (clojure.spec/cat :0 (s/+ (s/+ string?)) :1 (s/+ boolean?) :2 (s/* string?) :3 (s/* integer?)), :score 100}
-;;  {:program (clojure.spec/cat :0 (s/* (s/+ (s/+ string?))) :1 (s/+ boolean?) :2 (s/* string?) :3 (s/* integer?)), :score 100}
 ;;  {:program
 ;;   (clojure.spec/cat
 ;;    :0
 ;;    (s/+ (s/+ string?))
 ;;    :1
-;;    (s/+ boolean?)
+;;    boolean?
 ;;    :2
-;;    (s/and (s/and (s/and integer? odd?) odd?) odd?)
+;;    (s/and integer?)
 ;;    :3
-;;    (s/+ integer?)),
+;;    (s/and (s/and (s/and integer? even?)))
+;;    :4
+;;    string?),
 ;;   :score 100}
-;;  {:program (clojure.spec/cat :0 (s/* (s/+ string?)) :1 (s/+ boolean?) :2 (s/* string?) :3 (s/* integer?)), :score 100}
 ;;  {:program
 ;;   (clojure.spec/cat
 ;;    :0
-;;    (s/* (s/+ string?))
+;;    (s/+ (s/+ (s/+ (s/+ (s/+ (s/+ string?))))))
 ;;    :1
-;;    (s/+ boolean?)
+;;    boolean?
 ;;    :2
-;;    (s/and (s/and (s/and integer? odd?) odd?) odd?)
+;;    (s/and integer?)
 ;;    :3
-;;    (s/+ integer?)),
-;;   :score 100})
+;;    (s/and (s/and (s/and integer? even?)))
+;;    :4
+;;    string?),
+;;   :score 100}
+;;  {:program (clojure.spec/cat :0 string? :1 boolean? :2 (s/and integer?) :3 (s/and (s/and (s/and integer? even?))) :4 string?),
+;;   :score 100}
+;;  {:program (clojure.spec/cat :0 (s/+ string?) :1 boolean? :2 (s/and integer?) :3 integer? :4 string?), :score 100})
 
 
-;; why does it not gen?
-  (s/exercise (:program (first result)))
+  (s/exercise (eval (:program (first result))) 5)
+
+;; ([("" false 0 0 "") {:0 "", :1 false, :2 0, :3 0, :4 ""}]
+;;  [("4" false 0 0 "F") {:0 "4", :1 false, :2 0, :3 0, :4 "F"}]
+;;  [("L9" false -1 0 "7") {:0 "L9", :1 false, :2 -1, :3 0, :4 "7"}]
+;;  [("" true -2 0 "") {:0 "", :1 true, :2 -2, :3 0, :4 ""}]
+;;  [("3L" true -2 0 "") {:0 "3L", :1 true, :2 -2, :3 0, :4 ""}])
+
+
 )
 
 
