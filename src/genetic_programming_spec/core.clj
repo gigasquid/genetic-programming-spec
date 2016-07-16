@@ -10,6 +10,7 @@
 (def nest-prob 0.05)
 (def mutate-prob 0.1)
 (def crossover-prob 0.7)
+(def new-node-prob 0.05)
 (def max-depth 4)
 (def max-cat-len 5)
 
@@ -74,22 +75,34 @@
 (def population (initial-population 5 4))
 
 population
-(def test-data ["hi" true 5])
+(def test-data ["hi" true 5 6])
 
 
 (defn select-best [creatures tournament-size]
   (let [selected (repeatedly tournament-size #(rand-nth creatures))]
     (-> (sort-by :score selected) reverse first)))
 
-(loop [n 1
-       creatures population]
-  (if (zero? n)
-    creatures
-    (let [scored-creatures (map (fn [creature] (score creature test-data)) creatures)
-          elites (take 2 (reverse (sort-by :score scored-creatures)))
-          new-creatures ]
-      (println :elites (map :score elites))
-      (recur (dec n) creatures))))
+(defn evolve [pop-size max-gen tournament-size test-data]
+  (loop [n max-gen
+         creatures population]
+    (println "generation " (- max-gen n))
+    (if (zero? n)
+      (map (fn [creature] (score creature test-data)) creatures)
+      (let [scored-creatures (map (fn [creature] (score creature test-data)) creatures)
+            elites (take 2 (reverse (sort-by :score scored-creatures)))
+            new-creatures (for [i (range (- (count creatures) 2))]
+                            ;; prob add a totally new node
+                            (if (< (rand) new-node-prob)
+                             (do "making random node! "
+                                 {:program (make-random-cat (inc (rand-int max-cat-len)))})
+                             (let [creature1 (select-best scored-creatures tournament-size)
+                                   creature2 (select-best scored-creatures tournament-size)]
+                               (mutate (crossover creature1 creature2)))))]
+       (println :elites (map :score elites))
+       (recur (dec n) (into new-creatures elites))))))
+
+
+(def result (evolve 100 100 7 ["hi" true 5 8]))
 
 
 (comment
@@ -99,6 +112,7 @@ population
   (score {:program x} [1 1 nil 1])
   (mutate {:program x :score 1})
   (crossover {:program x :score 1} {:program (make-random-cat 4) :score 1})
+result
 
 )
 
