@@ -102,7 +102,7 @@
                                (let [creature1 (select-best scored-creatures tournament-size)
                                      creature2 (select-best scored-creatures tournament-size)]
                                  (mutate (crossover creature1 creature2)))))]
-         (println :elites (map :score elites))
+         (println "best-scores" (map :score elites))
          (recur (dec n) (into new-creatures elites)))))))
 
 
