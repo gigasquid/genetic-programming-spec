@@ -109,12 +109,12 @@
 
 (comment
 
-  (def result (evolve 100 50 7 ["hi" true 5 10 "boo"]))
-  (perfect-fit result)
+  (def creature-specs (evolve 100 100 7 ["hi" true 5 10 "boo"]))
+  (perfect-fit creature-specs)
   ;{:program (clojure.spec/cat :0 string? :1 boolean? :2 (s/and integer? odd?) :3 integer? :4 string?), :score 100}
 
 
-  (s/exercise (eval (:program (perfect-fit result))) 5)
+  (s/exercise (eval (:program (perfect-fit creature-specs))) 5)
 ;; ([("" true -1 -1 "") {:0 "", :1 true, :2 -1, :3 -1, :4 ""}]
 ;;  [("D" false -1 -1 "G") {:0 "D", :1 false, :2 -1, :3 -1, :4 "G"}]
 ;;  [("12" false -1 0 "l0") {:0 "12", :1 false, :2 -1, :3 0, :4 "l0"}]
