@@ -38,7 +38,7 @@
      (if problems
        (assoc creature :score (get-in problems [0 :in 0]))
        (assoc creature :score 100)))
-   (catch Throwable e (do (println "Creature is bad!" e)
+   (catch Throwable e (do (println "Creature is bad!")
                           (assoc creature :score 0)))))
 
 (defn mutable? [node]
@@ -67,13 +67,29 @@
                              program2)]
     {:program crossover-program}))
 
-(defn initial-population [popsize]
+(defn initial-population [popsize cat-length]
   (for [i (range popsize)]
-    {:program (make-random-cat (inc (rand-int max-cat-len)))}))
+    {:program (make-random-cat cat-length)}))
 
-(def population (initial-population 5))
+(def population (initial-population 5 4))
 
 population
+(def test-data ["hi" true 5])
+
+
+(defn select-best [creatures tournament-size]
+  (let [selected (repeatedly tournament-size #(rand-nth creatures))]
+    (-> (sort-by :score selected) reverse first)))
+
+(loop [n 1
+       creatures population]
+  (if (zero? n)
+    creatures
+    (let [scored-creatures (map (fn [creature] (score creature test-data)) creatures)
+          elites (take 2 (reverse (sort-by :score scored-creatures)))
+          new-creatures ]
+      (println :elites (map :score elites))
+      (recur (dec n) creatures))))
 
 
 (comment
