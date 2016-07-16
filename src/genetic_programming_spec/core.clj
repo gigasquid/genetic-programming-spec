@@ -1,18 +1,21 @@
 (ns genetic-programming-spec.core
-  (:require [clojure.spec :as s]))
+  (:require [clojure.spec :as s]
+            [clojure.set :as set]
+            [clojure.walk :as walk]))
 
 
 (def seqs ['s/+ 's/*])
 (def preds ['integer? 'string? 'boolean? '(s/and integer? even?) '(s/and integer? odd?)])
 (def seq-prob 0.5)
 (def nest-prob 0.0)
+(def mutate-prob 0.1)
 (def max-depth 4)
 (def max-num 5)
 
 (declare make-random-seq)
 
 (defn make-random-arg [n]
-  (if (and (pos? n) (> (rand) seq-prob))
+  (if (and (pos? n) (< (rand) seq-prob))
     `~(make-random-seq n)
     `~(rand-nth preds)))
 
@@ -28,7 +31,7 @@
                        (conj r (keyword (str i)) (make-random-arg max-depth))) [] (range len))]
     `(s/cat ~@args)))
 
-(def x (make-random-cat 2))
+(def x (make-random-cat 4))
 x
 
 (s/explain-data (eval x) [true 2])
@@ -50,22 +53,18 @@ x
 (score {:program x} [1 1])
 
 
+(defn mutate [creature]
+  (let [program (:program creature)
+        mutable? (fn [x] (contains? (set/union (set seqs) (set preds)) x))
+        mutated-program (walk/postwalk (fn [x] (if (and (mutable? x) (< (rand) mutate-prob))
+                                                (make-random-arg max-depth)
+                                                x)) x)]
+    (assoc creature :program mutated-program)))
 
- (s/conform even? 100)
-
-  (s/conform (s/cat :x even? :y odd?) [2 4])
-
-(s/explain (s/alt :even even? :small #(< % 42)) 50)
+(mutate {:program x :score 1})
 
 
 
 
-(s/explain (s/alt :s string? :b boolean?) [false])
-(s/explain (s/* string?) ["jo" "i" ])
-(s/explain (s/+ string?) ["jo" "i" ])
-(s/conform (s/? string?) ["jo" ])
-
-(s/explain (s/cat :x (s/spec (s/+ string?)) :y (s/+ int?)) [["a" "b"] 1 3])
-(s/explain-data (s/cat :1 (s/+ string?) :2 (s/+ int?)) ["a" "b" "c" true])
 
 
