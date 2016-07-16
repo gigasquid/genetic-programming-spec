@@ -3,7 +3,7 @@
 
 
 (def seqs ['s/+ 's/*])
-(def preds [integer? string? boolean?])
+(def preds ['integer? 'string? 'boolean? '(s/and integer? even?) '(s/and integer? odd?)])
 (def seq-prob 0.5)
 (def nest-prob 0.0)
 (def max-depth 4)
@@ -31,7 +31,7 @@
 (def x (make-random-cat 2))
 x
 
-(s/explain-data (eval x) [1 1])
+(s/explain-data (eval x) [true 2])
 (get-in  (:clojure.spec/problems (s/explain-data (eval x) [true 1])) [0 :in 0]
      )
 
@@ -45,9 +45,9 @@ x
   (let [problems (:clojure.spec/problems (s/explain-data (eval (:program creature)) test-data))]
     (if problems
       (assoc creature :score (get-in problems [0 :in 0]))
-      (assoc creature :score 10))))
+      (assoc creature :score 100))))
 
-(score {:program x} [true 1])
+(score {:program x} [1 1])
 
 
 
