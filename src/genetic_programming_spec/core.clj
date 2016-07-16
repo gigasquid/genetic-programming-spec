@@ -7,7 +7,7 @@
 (def seqs ['s/+ 's/*])
 (def preds ['integer? 'string? 'boolean? '(s/and integer? even?) '(s/and integer? odd?)])
 (def seq-prob 0.5)
-(def nest-prob 0.05)
+(def nest-prob 0.00)
 (def mutate-prob 0.1)
 (def crossover-prob 0.7)
 (def new-node-prob 0.05)
@@ -26,7 +26,6 @@
     `(s/spec (~(rand-nth seqs) ~(make-random-arg (dec n))))
     `(~(rand-nth seqs) ~(make-random-arg (dec n)))))
 
-(make-random-arg 2)
 
 (defn make-random-cat [len]
   (let [args (reduce (fn [r i]
@@ -39,8 +38,7 @@
      (if problems
        (assoc creature :score (get-in problems [0 :in 0]))
        (assoc creature :score 100)))
-   (catch Throwable e (do (println "Creature is bad!")
-                          (assoc creature :score 0)))))
+   (catch Throwable e (assoc creature :score 0))))
 
 (defn mutable? [node]
   (or (when (seq? node)
@@ -68,14 +66,9 @@
                              program2)]
     {:program crossover-program}))
 
-(defn initial-population [popsize cat-length]
+(defn initial-population [popsize max-cat-length]
   (for [i (range popsize)]
-    {:program (make-random-cat cat-length)}))
-
-(def population (initial-population 5 4))
-
-population
-(def test-data ["hi" true 5 6])
+    {:program (make-random-cat (inc (rand-int max-cat-length)))}))
 
 
 (defn select-best [creatures tournament-size]
@@ -84,7 +77,7 @@ population
 
 (defn evolve [pop-size max-gen tournament-size test-data]
   (loop [n max-gen
-         creatures population]
+         creatures (initial-population pop-size (count test-data))]
     (println "generation " (- max-gen n))
     (if (zero? n)
       (map (fn [creature] (score creature test-data)) creatures)
@@ -102,7 +95,8 @@ population
        (recur (dec n) (into new-creatures elites))))))
 
 
-(def result (evolve 100 100 7 ["hi" true 5 8]))
+(def result (evolve 100 10 7 ["hi" true 5 8 7]))
+(first result)
 
 
 (comment
@@ -112,7 +106,8 @@ population
   (score {:program x} [1 1 nil 1])
   (mutate {:program x :score 1})
   (crossover {:program x :score 1} {:program (make-random-cat 4) :score 1})
-result
+  
+ (first result)
 
 )
 
