@@ -96,10 +96,9 @@
        scored-creatures
        (let [elites (take 2 (reverse (sort-by :score scored-creatures)))
              new-creatures (for [i (range (- (count creatures) 2))]
-                             ;; prob add a totally new node
+                             ;; add a random node to improve diversity
                              (if (< (rand) new-node-prob)
-                               (do "making random node! "
-                                   {:program (make-random-cat (count test-data))})
+                               {:program (make-random-cat (count test-data))}
                                (let [creature1 (select-best scored-creatures tournament-size)
                                      creature2 (select-best scored-creatures tournament-size)]
                                  (mutate (crossover creature1 creature2)))))]
