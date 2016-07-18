@@ -3,7 +3,6 @@
             [clojure.spec :as s]
             [clojure.walk :as walk]))
 
-
 (def seqs ['s/+ 's/*])
 (def and-ors ['s/and 's/or])
 (def preds ['integer? 'string? 'boolean? '(s/and integer? even?) '(s/and integer? odd?)])
@@ -34,7 +33,6 @@
 
     :else
     `(~(rand-nth seqs) ~(make-random-arg (dec n)))))
-
 
 (defn make-random-cat [len]
   (let [args (reduce (fn [r i]
@@ -104,7 +102,6 @@
                                  (mutate (crossover creature1 creature2)))))]
          (println "best-scores" (map :score elites))
          (recur (dec n) (into new-creatures elites)))))))
-
 
 (comment
 
