@@ -7,8 +7,8 @@
 (def and-ors ['s/and 's/or])
 (def preds ['integer? 'string? 'boolean? '(s/and integer? even?) '(s/and integer? odd?)])
 (def seq-prob 0.3)
-(def nest-prob 0.00)
-(def and-or-prob 0.5)
+(def nest-prob 0.0)
+(def and-or-prob 0.85)
 (def mutate-prob 0.1)
 (def crossover-prob 0.7)
 (def new-node-prob 0.05)
@@ -29,7 +29,7 @@
 
 
     (< (rand) and-or-prob)
-    `(~(rand-nth and-ors) ~(make-random-arg (dec n)))
+    `(~(rand-nth and-ors) ~(make-random-arg (dec n)) ~(make-random-arg (dec n)))
 
     :else
     `(~(rand-nth seqs) ~(make-random-arg (dec n)))))
