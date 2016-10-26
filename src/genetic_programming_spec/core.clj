@@ -18,8 +18,8 @@
 
 (defn make-random-arg [n]
   (if (and (pos? n) (< (rand) seq-prob))
-    `~(make-random-seq n)
-    `~(rand-nth preds)))
+    (make-random-seq n)
+    (rand-nth preds)))
 
 (defn make-random-seq [n]
   (cond
